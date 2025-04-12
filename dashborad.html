@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تجمع الأحساء الصحي - تتبع الأجهزة</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> <!-- أيقونات -->
+  <style>
+    body {
+      background-color: #e6f2ff;
+      font-family: 'Tahoma', sans-serif;
+      text-align: center;
+      direction: rtl;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    img.logo {
+      width: 250px;
+      margin-bottom: 20px;
+    }
+    select, input, button {
+      width: 80%;
+      padding: 10px;
+      margin: 10px auto;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #aaa;
+    }
+    button {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005b99;
+    }
+    h2 {
+      color: #003366;
+    }
+    .icon-btn {
+      font-size: 24px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    .icon-refresh {
+      color: #007acc;
+    }
+    .icon-refresh:hover {
+      color: #005b99;
+    }
+    .device-card {
+      background-color: #87cefa; /* sky blue */
+      border: 1px solid #aaa; /* gray border */
+      padding: 10px 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      min-width: 120px;
+      text-align: center;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .device-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .delete-btn {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .delete-btn:hover {
+      background-color: #990000;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <img src="new logo .png" class="logo" alt="شعار تجمع الأحساء الصحي">
+  <h2>تتبع الأجهزة حسب القسم ونوع الاتصال</h2>
+
+  <input type="text" id="department" placeholder="اكتب اسم القسم">
+  <input type="text" id="deviceNumber" placeholder="أدخل رقم الجهاز">
+  <select id="connectionType">
+    <option value="">اختر نوع الاتصال</option>
+    <option value="كيابل">كيابل</option>
+    <option value="توصيلات">توصيلات</option>
+    <option value="Wi-Fi">Wi-Fi</option>
+  </select>
+
+  <button onclick="addDevice()">إضافة جهاز</button>
+  <button onclick="showDeviceNumbers()">عرض أرقام الأجهزة</button>
+  
+  <!-- أيقونات تجديد البيانات -->
+  <i class="fas fa-sync-alt icon-btn icon-refresh" title="تحديث البيانات" onclick="refreshData()"></i>
+
+  <!-- مكان عرض النتيجة -->
+  <div id="result" style="margin-top: 20px;"></div>
+</div>
+
+<script>
+  // تحميل الأجهزة من التخزين
+  let devices = JSON.parse(localStorage.getItem('devices')) || [];
+
+  // إضافة جهاز
+  function addDevice() {
+    const dept = document.getElementById("department").value.trim();
+    const deviceNumber = document.getElementById("deviceNumber").value.trim();
+    const type = document.getElementById("connectionType").value;
+
+    if (!dept || !deviceNumber || !type) {
+      alert("يرجى إدخال اسم القسم، رقم الجهاز ونوع الاتصال");
+      return;
+    }
+
+    devices.push({ القسم: dept, الرقم: deviceNumber, النوع: type });
+    localStorage.setItem('devices', JSON.stringify(devices));
+    alert(`تمت إضافة الجهاز رقم ${deviceNumber} في قسم ${dept} باستخدام ${type}`);
+  }
+
+  // عرض الأجهزة داخل كروت مع زر الحذف
+  function showDeviceNumbers() {
+    const dept = document.getElementById("department").value.trim();
+    const type = document.getElementById("connectionType").value;
+    const resultDiv = document.getElementById("result");
+
+    if (!dept || !type) {
+      alert("يرجى إدخال اسم القسم ونوع الاتصال");
+      return;
+    }
+
+    const filteredDevices = devices.filter(d => d.القسم === dept && d.النوع === type);
+    resultDiv.innerHTML = ""; // مسح العرض السابق
+
+    if (filteredDevices.length > 0) {
+      const title = document.createElement("p");
+      title.textContent = `أرقام الأجهزة في قسم ${dept} باستخدام ${type}:`;
+      title.style.fontWeight = "bold";
+      title.style.marginBottom = "10px";
+
+      const container = document.createElement("div");
+      container.className = "device-container";
+
+      filteredDevices.forEach((d, index) => {
+        const card = document.createElement("div");
+        card.className = "device-card";
+        card.textContent = `رقم الجهاز: ${d.الرقم}`;
+        
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "حذف";
+        deleteBtn.onclick = function () {
+          deleteDevice(index);
+        };
+
+        card.appendChild(deleteBtn);
+        container.appendChild(card);
+      });
+
+      resultDiv.appendChild(title);
+      resultDiv.appendChild(container);
+    } else {
+      resultDiv.innerHTML = `لا توجد أجهزة في قسم ${dept} باستخدام ${type}`;
+    }
+  }
+
+  // تحديث البيانات (تفريغ الحقول والمخرجات)
+  function refreshData() {
+    document.getElementById("department").value = "";
+    document.getElementById("deviceNumber").value = "";
+    document.getElementById("connectionType").value = "";
+    document.getElementById("result").innerHTML = "";
+  }
+
+  // حذف جهاز من الأجهزة
+  function deleteDevice(index) {
+    devices.splice(index, 1); // حذف الجهاز حسب فهرس المصفوفة
+    localStorage.setItem('devices', JSON.stringify(devices));
+    showDeviceNumbers(); // تحديث العرض بعد الحذف
+  }
+</script>
+
+</body>
+</html>
